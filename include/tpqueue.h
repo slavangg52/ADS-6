@@ -1,61 +1,59 @@
 // Copyright 2022 NNTU-CS
 #ifndef INCLUDE_TPQUEUE_H_
 #define INCLUDE_TPQUEUE_H_
-#ifndef INCLUDE_TPQUEUE_H_
-#define INCLUDE_TPQUEUE_H_
 
-#include <string>
+#include <stdexcept>
 
 template<typename T>
 class TPQueue {
  private:
   struct Node {
-    T element;
-    Node* nextNode;
-    explicit Node(const T& val) : element(val), nextNode(nullptr) {}
+    T data;
+    Node* link;
+    explicit Node(const T& input) : data(input), link(nullptr) {}
   };
 
-  Node* frontNode;
+  Node* head;
 
  public:
-  TPQueue() : frontNode(nullptr) {}
+  TPQueue() : head(nullptr) {}
 
-  void push(const T& val) {
-    Node* newNode = new Node(val);
+  ~TPQueue() {
+    while (head) {
+      Node* temp = head;
+      head = head->link;
+      delete temp;
+    }
+  }
 
-    if (frontNode == nullptr || val.prior > frontNode->element.prior) {
-      newNode->nextNode = frontNode;
-      frontNode = newNode;
+  void push(const T& element) {
+    Node* newNode = new Node(element);
+    if (!head) {
+      head = newNode;
       return;
     }
-
-    Node* traverse = frontNode;
-    while (traverse->nextNode != nullptr && traverse->nextNode->element.prior >= val.prior) {
-      traverse = traverse->nextNode;
+    if (element.prior > head->data.prior) {
+      newNode->link = head;
+      head = newNode;
+      return;
     }
-
-    newNode->nextNode = traverse->nextNode;
-    traverse->nextNode = newNode;
+    Node* iterator = head;
+    while (iterator->link && iterator->link->data.prior >= element.prior) {
+      iterator = iterator->link;
+    }
+    newNode->link = iterator->link;
+    iterator->link = newNode;
   }
 
   T pop() {
-    if (frontNode == nullptr) {
-      throw std::string("Queue is empty");
+    if (!head) {
+      throw std::out_of_range("Queue is empty!");
     }
-
-    Node* tempNode = frontNode;
-    T returnValue = tempNode->element;
-    frontNode = frontNode->nextNode;
-    delete tempNode;
+    Node* removeNode = head;
+    T returnValue = head->data;
+    head = head->link;
+    delete removeNode;
     return returnValue;
-  }
-
-  ~TPQueue() {
-    while (frontNode != nullptr) {
-      Node* toDelete = frontNode;
-      frontNode = frontNode->nextNode;
-      delete toDelete;
-    }
   }
 };
 
